@@ -1140,55 +1140,85 @@ function buildGame(row, data) {
   return { voteId: row.voteId, title: row.shortName||header.ItemTitle||"ללא כותרת", questions };
 }
 
-async function loadData(bustCache=false) {
+async function loadData(bustCache) {
   showScreen("loading");
+  if (bustCache) writeCache({});
+
+  // ── שלב 1: קרא את רשימת ה-voteIds מהגיליון ──
+  var rows;
   try {
-    if (bustCache) writeCache({});
-    const rows  = await fetchSheetRows();
-    if (!rows.length) throw new Error("לא נמצאו הצבעות פעילות");
-    const cache = readCache();
-    // ── Phase 1: load from cache instantly ──
-    for (const row of rows) {
-      if (cache[row.voteId]) {
-        allGames.push(cache[row.voteId]);
-      }
-    }
-
-    // If we already have games from cache — show home immediately
-    if (allGames.length > 0) {
-      showScreen("home");
-    }
-
-    // ── Phase 2: fetch any missing rows one-by-one, show home after first success ──
-    const missing = rows.filter(r => !cache[r.voteId]);
-    if (missing.length > 0) {
-      const ind = document.getElementById("bg-load-indicator");
-      if (ind) { ind.className = "bg-loader-visible"; }
-    }
-    let loaded = 0;
-    for (const row of missing) {
-      try {
-        const data = await fetchVoteDetails(row.voteId);
-        const game = buildGame(row, data);
-        if (game) {
-          cache[row.voteId] = game;
-          allGames.push(game);
-          writeCache(cache);
-          loaded++;
-          if (allGames.length === 1) showScreen("home");
-          const txt = document.getElementById("bg-load-text");
-          if (txt) txt.textContent = "טוען הצבעות... (" + allGames.length + ")";
-        }
-      } catch(e2) {}
-    }
-    const ind2 = document.getElementById("bg-load-indicator");
-    if (ind2) { ind2.className = "bg-loader-hidden"; }
-
-    if (!allGames.length) throw new Error("לא נמצאו הצבעות תקינות");
+    rows = await fetchSheetRows();
   } catch(e) {
-    document.getElementById("error-msg").textContent = e.message;
-    showScreen("error");
+    showError("שגיאה בטעינת רשימת ההצבעות: " + e.message);
+    return;
   }
+  if (!rows || !rows.length) { showError("לא נמצאו הצבעות פעילות"); return; }
+
+  var cache = readCache();
+
+  // ── שלב 2: הצג מיד הצבעות שכבר ב-cache ──
+  rows.forEach(function(row) {
+    if (cache[row.voteId]) allGames.push(cache[row.voteId]);
+  });
+  if (allGames.length > 0) showScreen("home");
+
+  // ── שלב 3: כל ה-rows שחסרים — טען ברקע ─ ─ ─ ─
+  var missing = rows.filter(function(r) { return !cache[r.voteId]; });
+  if (!missing.length) {
+    if (!allGames.length) showError("לא נמצאו הצבעות תקינות");
+    return;
+  }
+
+  // הצג spinner אם עדיין בטעינה
+  if (!allGames.length) {
+    var ind = document.getElementById("bg-load-indicator");
+    if (ind) ind.className = "bg-loader-visible";
+  }
+
+  // טען ברקע — ללא חסימה
+  loadMissingInBackground(missing, cache);
+}
+
+function loadMissingInBackground(missing, cache) {
+  var idx = 0;
+
+  function loadNext() {
+    if (idx >= missing.length) {
+      // סיימנו
+      var ind = document.getElementById("bg-load-indicator");
+      if (ind) ind.className = "bg-loader-hidden";
+      if (!allGames.length) showError("לא נמצאו הצבעות תקינות");
+      return;
+    }
+    var row = missing[idx++];
+    fetchVoteDetails(row.voteId).then(function(data) {
+      var game = buildGame(row, data);
+      if (game) {
+        cache[row.voteId] = game;
+        allGames.push(game);
+        writeCache(cache);
+        // הצג את הבית ברגע שיש הצבעה ראשונה
+        if (allGames.length === 1) {
+          showScreen("home");
+          var ind = document.getElementById("bg-load-indicator");
+          if (ind) ind.className = "bg-loader-visible";
+        }
+        var txt = document.getElementById("bg-load-text");
+        if (txt) txt.textContent = "טוען הצבעות... (" + allGames.length + ")";
+      }
+      loadNext();
+    }).catch(function() {
+      loadNext(); // המשך גם אם הצבעה אחת נכשלה
+    });
+  }
+
+  loadNext();
+}
+
+function showError(msg) {
+  var el = document.getElementById("error-msg");
+  if (el) el.textContent = msg;
+  showScreen("error");
 }
 
 // ══════════════════════════════════════════════
