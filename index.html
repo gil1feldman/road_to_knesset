@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<title>הדרך לכנסת</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800;900&family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════ */
+:root {
+  --sky:      #e8f4fd;
+  --sky2:     #d0eaf8;
+  --ground:   #c8b89a;
+  --road:     #6b7280;
+  --road-mk:  #4b5563;
+  --grass:    #86c15f;
+  --grass2:   #6aaa44;
+  --knesset:  #1a3a5c;
+  --gold:     #d4a843;
+  --accent:   #e63946;
+  --green:    #2dc653;
+  --blue:     #2563eb;
+  --text:     #1e293b;
+  --muted:    #64748b;
+  --white:    #ffffff;
+  --card-bg:  #ffffff;
+  --shadow:   0 4px 24px rgba(0,0,0,0.10);
+  --shadow-lg:0 8px 40px rgba(0,0,0,0.15);
+  --r:        16px;
+  --r-sm:     10px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: 'Rubik', sans-serif;
+  background: var(--sky);
+  color: var(--text);
+  overflow: hidden;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  width: 100%;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════
+   SCREENS
+═══════════════════════════════════════════ */
+.screen { display: none; width: 100%; height: 100%; flex-direction: column; position: absolute; inset: 0; }
+.screen.active { display: flex; }
+
+/* ═══════════════════════════════════════════
+   LOADING
+═══════════════════════════════════════════ */
+#screen-loading {
+  align-items: center; justify-content: center; gap: 20px;
+  background: linear-gradient(180deg, #c9e8f8 0%, #e8f4fd 60%, #c8b89a 100%);
+}
+.load-knesset { font-size: 56px; animation: floatUp 1.5s ease-in-out infinite; }
+@keyframes floatUp { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+.load-title { font-size: 28px; font-weight: 900; color: var(--knesset); }
+.load-sub { font-size: 14px; color: var(--muted); font-weight: 500; }
+.load-bar-wrap { width: 200px; height: 6px; background: rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden; }
+.load-bar { height: 100%; background: var(--gold); border-radius: 6px; animation: loadAnim 1.8s ease-in-out infinite; }
+@keyframes loadAnim { 0%{width:0%} 60%{width:90%} 100%{width:100%} }
+
+/* ═══════════════════════════════════════════
+   ERROR
+═══════════════════════════════════════════ */
+#screen-error {
+  align-items: center; justify-content: center; gap: 16px; padding: 24px;
+  background: var(--sky);
+}
+.err-icon { font-size: 52px; }
+.err-title { font-size: 22px; font-weight: 900; color: var(--accent); }
+.err-msg { font-size: 13px; color: var(--muted); max-width: 320px; text-align: center; line-height: 1.6; background: rgba(230,57,70,0.07); border: 1px solid rgba(230,57,70,0.2); border-radius: var(--r-sm); padding: 12px 16px; }
+.btn-retry { background: var(--accent); color: #fff; border: none; border-radius: var(--r-sm); padding: 12px 28px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+/* ═══════════════════════════════════════════
+   HOME
+═══════════════════════════════════════════ */
+#screen-home {
+  background: linear-gradient(180deg, #a8d8f0 0%, #c9e8f8 30%, #e8f4fd 55%, #d4c5a8 75%, #c8b89a 100%);
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* Sky decoration */
+.home-sky {
+  position: relative;
+  flex-shrink: 0;
+  height: 140px;
+  overflow: hidden;
+}
+.cloud {
+  position: absolute;
+  background: #fff;
+  border-radius: 40px;
+  opacity: 0.85;
+}
+.cloud::before, .cloud::after {
+  content: '';
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+}
+.cloud-1 { width: 80px; height: 26px; top: 28px; right: 60px; }
+.cloud-1::before { width: 36px; height: 36px; top: -18px; right: 10px; }
+.cloud-1::after  { width: 26px; height: 26px; top: -12px; right: 36px; }
+.cloud-2 { width: 60px; height: 20px; top: 50px; left: 40px; opacity: 0.6; }
+.cloud-2::before { width: 28px; height: 28px; top: -14px; right: 8px; }
+.cloud-2::after  { width: 20px; height: 20px; top: -10px; right: 28px; }
+
+/* Knesset building on home */
+.home-knesset-wrap {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding-bottom: 4px;
+  margin-top: -20px;
+}
+
+/* Home content card */
+.home-card {
+  background: var(--white);
+  border-radius: 28px 28px 0 0;
+  padding: 24px 20px 32px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+}
+.home-badge {
+  background: linear-gradient(135deg, var(--gold), #f0c040);
+  color: var(--knesset);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+}
+.home-title {
+  font-size: clamp(26px, 7vw, 36px);
+  font-weight: 900;
+  color: var(--knesset);
+  text-align: center;
+  line-height: 1.15;
+  margin-bottom: 6px;
+}
+.home-sub {
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 22px;
+  font-family: 'Assistant', sans-serif;
+}
+
+/* Difficulty */
+.diff-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; width: 100%; text-align: center; }
+.diff-row { display: flex; gap: 8px; width: 100%; margin-bottom: 22px; }
+.diff-btn {
+  flex: 1;
+  border-radius: 14px;
+  border: 2px solid #e2e8f0;
+  background: #f8fafc;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 10px 4px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.2s;
+}
+.diff-btn .d-icon { font-size: 22px; }
+.diff-btn .d-name { font-size: 13px; color: var(--text); font-weight: 800; }
+.diff-btn .d-steps { font-size: 10px; color: var(--muted); }
+.diff-btn.easy.active   { border-color: var(--green); background: rgba(45,198,83,0.08); }
+.diff-btn.easy.active .d-name { color: var(--green); }
+.diff-btn.medium.active { border-color: var(--blue); background: rgba(37,99,235,0.08); }
+.diff-btn.medium.active .d-name { color: var(--blue); }
+.diff-btn.hard.active   { border-color: var(--accent); background: rgba(230,57,70,0.08); }
+.diff-btn.hard.active .d-name { color: var(--accent); }
+
+/* Home buttons */
+.btn-play {
+  width: 100%;
+  background: var(--knesset);
+  color: var(--white);
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 6px 0 #0d2240, var(--shadow);
+  transition: all 0.1s;
+  position: relative;
+  top: 0;
+  margin-bottom: 10px;
+}
+.btn-play:active { top: 6px; box-shadow: 0 0 0 transparent; }
+.btn-howto {
+  width: 100%;
+  background: transparent;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.btn-howto:hover { border-color: var(--knesset); color: var(--knesset); }
+.home-credit { font-size: 11px; color: #cbd5e1; margin-top: 16px; }
+
+/* ═══════════════════════════════════════════
+   PLAY SCREEN
+═══════════════════════════════════════════ */
+#screen-play {
+  background: linear-gradient(180deg, #a8d8f0 0%, #c9e8f8 25%, #d4eefc 45%);
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Top bar */
+.top-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 6px;
+  position: relative;
+  z-index: 10;
+}
+.btn-back-play {
+  background: rgba(255,255,255,0.8);
+  border: none;
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--knesset);
+  backdrop-filter: blur(4px);
+}
+.progress-wrap {
+  flex: 1;
+  background: rgba(255,255,255,0.5);
+  border-radius: 20px;
+  height: 10px;
+  overflow: hidden;
+  backdrop-filter: blur(4px);
+}
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), #f7d060);
+  border-radius: 20px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 8px rgba(212,168,67,0.5);
+}
+.step-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--knesset);
+  background: rgba(255,255,255,0.8);
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+
+/* ── SCENE ── */
+.scene-wrap {
+  flex-shrink: 0;
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+}
+
+/* Sky + clouds in scene */
+.scene-sky {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #a8d8f0 0%, #d4eefc 100%);
+}
+.scene-cloud-1, .scene-cloud-2 {
+  position: absolute;
+  background: #fff;
+  border-radius: 30px;
+  opacity: 0.75;
+}
+.scene-cloud-1 { width: 70px; height: 22px; top: 18px; right: 12%; animation: cloudDrift1 18s linear infinite; }
+.scene-cloud-1::before { content:''; position:absolute; background:#fff; border-radius:50%; width:32px;height:32px;top:-16px;right:8px; }
+.scene-cloud-1::after  { content:''; position:absolute; background:#fff; border-radius:50%; width:22px;height:22px;top:-10px;right:30px; }
+.scene-cloud-2 { width: 50px; height: 16px; top: 34px; left: 8%; opacity:0.5; animation: cloudDrift2 26s linear infinite; }
+.scene-cloud-2::before { content:''; position:absolute; background:#fff; border-radius:50%; width:24px;height:24px;top:-12px;right:6px; }
+@keyframes cloudDrift1 { 0%{transform:translateX(0)} 100%{transform:translateX(120px)} }
+@keyframes cloudDrift2 { 0%{transform:translateX(0)} 100%{transform:translateX(-100px)} }
+
+/* Knesset building (distant, right side) */
+.knesset-far {
+  position: absolute;
+  bottom: 62px;
+  right: 16px;
+  transform-origin: bottom center;
+  transition: transform 0.5s ease;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+}
+
+/* Grass strip */
+.grass-strip {
+  position: absolute;
+  bottom: 50px;
+  left: 0; right: 0;
+  height: 28px;
+  background: linear-gradient(180deg, var(--grass) 0%, var(--grass2) 100%);
+  border-radius: 0;
+}
+/* Grass texture dots */
+.grass-strip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(90deg, rgba(0,0,0,0.04) 0px, transparent 3px, transparent 12px);
+}
+
+/* Road */
+.road-strip {
+  position: absolute;
+  bottom: 0;
+  left: 0; right: 0;
+  height: 52px;
+  background: #7c8494;
+}
+.road-strip::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0; right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(90deg, #f0c040 0px, #f0c040 22px, transparent 22px, transparent 44px);
+  transform: translateY(-50%);
+  opacity: 0.7;
+}
+/* Sidewalk */
+.road-strip::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 6px;
+  background: #9ca3af;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Citizen walker */
+.citizen-wrap {
+  position: absolute;
+  bottom: 50px; /* sits on grass */
+  transition: right 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 5;
+}
+.citizen-svg { display: block; }
+
+/* Walk animation */
+@keyframes legFwd  { 0%,100%{transform:rotate(-20deg)} 50%{transform:rotate(16deg)} }
+@keyframes legBack { 0%,100%{transform:rotate(16deg)}  50%{transform:rotate(-20deg)} }
+@keyframes armFwd  { 0%,100%{transform:rotate(16deg)}  50%{transform:rotate(-14deg)} }
+@keyframes armBack { 0%,100%{transform:rotate(-14deg)} 50%{transform:rotate(16deg)} }
+@keyframes bodyBob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-2px)} }
+
+.citizen-walking .c-body { animation: bodyBob 0.45s ease-in-out infinite; }
+.citizen-walking .c-leg-l { animation: legFwd  0.45s ease-in-out infinite; transform-origin: 10px 0; }
+.citizen-walking .c-leg-r { animation: legBack 0.45s ease-in-out infinite; transform-origin: 10px 0; }
+.citizen-walking .c-arm-l { animation: armFwd  0.45s ease-in-out infinite; transform-origin: 5px 3px; }
+.citizen-walking .c-arm-r { animation: armBack 0.45s ease-in-out infinite; transform-origin: 9px 3px; }
+.citizen-idle .c-leg-l, .citizen-idle .c-leg-r,
+.citizen-idle .c-arm-l, .citizen-idle .c-arm-r,
+.citizen-idle .c-body { animation: none !important; }
+
+/* Feedback burst */
+.feedback-burst {
+  position: absolute;
+  bottom: 110px;
+  right: 50%;
+  transform: translateX(50%);
+  font-size: 36px;
+  font-weight: 900;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 20;
+}
+.feedback-burst.show-correct {
+  animation: burstCorrect 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  color: var(--green);
+}
+.feedback-burst.show-wrong {
+  animation: burstWrong 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  color: var(--accent);
+}
+@keyframes burstCorrect { 0%{opacity:0;transform:translateX(50%) translateY(10px) scale(0.5)} 40%{opacity:1;transform:translateX(50%) translateY(-20px) scale(1.3)} 100%{opacity:0;transform:translateX(50%) translateY(-40px) scale(1)} }
+@keyframes burstWrong   { 0%{opacity:0;transform:translateX(50%) translateY(10px) scale(0.5)} 40%{opacity:1;transform:translateX(50%) translateY(-20px) scale(1.3)} 100%{opacity:0;transform:translateX(50%) translateY(-40px) scale(1)} }
+
+/* ── QUESTION CARD ── */
+.question-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 14px 10px;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.vote-card {
+  background: var(--white);
+  border-radius: var(--r);
+  padding: 14px 16px 10px;
+  box-shadow: var(--shadow);
+  flex-shrink: 0;
+}
+.vote-card-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  font-family: 'Assistant', sans-serif;
+}
+.vote-card-title {
+  font-size: clamp(13px, 3.5vw, 16px);
+  font-weight: 700;
+  color: var(--knesset);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.vote-mk-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vote-mk-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  border: 2px solid #e2e8f0;
+}
+.vote-mk-info { flex: 1; min-width: 0; }
+.vote-mk-name { font-size: 15px; font-weight: 800; color: var(--text); line-height: 1.2; }
+.vote-mk-faction { font-size: 11px; color: var(--muted); font-family: 'Assistant', sans-serif; }
+
+/* Timer arc */
+.timer-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: auto;
+}
+.timer-arc {
+  position: relative;
+  width: 38px; height: 38px;
+  flex-shrink: 0;
+}
+.timer-arc svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+.timer-arc-track { fill: none; stroke: #e2e8f0; stroke-width: 3; }
+.timer-arc-fill  { fill: none; stroke: var(--green); stroke-width: 3; stroke-linecap: round; transition: stroke-dashoffset 0.1s linear, stroke 0.3s; }
+.timer-num {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 900;
+  color: var(--text);
+}
+
+/* Answer buttons */
+.answer-row {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.ans-btn {
+  flex: 1;
+  border-radius: 14px;
+  border: 2.5px solid transparent;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 14px 6px;
+  transition: all 0.15s;
+  position: relative;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.ans-btn .ans-icon { font-size: 22px; }
+.ans-btn .ans-text { font-size: 14px; font-weight: 800; }
+
+.ans-btn.for     { background: rgba(45,198,83,0.1); border-color: var(--green); color: #15803d; box-shadow: 0 4px 0 rgba(45,198,83,0.25); }
+.ans-btn.against { background: rgba(230,57,70,0.1);  border-color: var(--accent); color: #b91c1c; box-shadow: 0 4px 0 rgba(230,57,70,0.2); }
+.ans-btn.abstain { background: rgba(234,179,8,0.1);  border-color: #ca8a04; color: #92400e; box-shadow: 0 4px 0 rgba(234,179,8,0.2); }
+
+.ans-btn:active:not(:disabled) { top: 4px; box-shadow: none !important; }
+.ans-btn:disabled { opacity: 0.45; cursor: not-allowed; top: 0 !important; }
+
+.ans-btn.correct-flash { background: var(--green) !important; color: #fff !important; border-color: var(--green) !important; transform: scale(1.04); }
+.ans-btn.wrong-flash   { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
+
+/* Question counter pill */
+.q-counter {
+  text-align: center;
+  flex-shrink: 0;
+}
+.q-pill {
+  display: inline-block;
+  background: rgba(255,255,255,0.8);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--knesset);
+  backdrop-filter: blur(4px);
+}
+
+/* Flash overlay */
+.screen-flash {
+  position: fixed; inset: 0; z-index: 50;
+  pointer-events: none; opacity: 0;
+  transition: opacity 0.15s;
+}
+.screen-flash.green { background: rgba(45,198,83,0.15); }
+.screen-flash.red   { background: rgba(230,57,70,0.15); }
+
+/* ═══════════════════════════════════════════
+   RESULT OVERLAY
+═══════════════════════════════════════════ */
+.result-overlay {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(15,30,60,0.7);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 0;
+  animation: fadeInOverlay 0.3s ease;
+}
+@keyframes fadeInOverlay { from{opacity:0} to{opacity:1} }
+
+.result-sheet {
+  background: var(--white);
+  border-radius: 28px 28px 0 0;
+  padding: 24px 20px 36px;
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+  animation: slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  max-height: 85dvh;
+  overflow-y: auto;
+}
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+
+.sheet-handle { width: 40px; height: 4px; background: #e2e8f0; border-radius: 4px; margin: 0 auto 20px; }
+.result-emoji { font-size: 56px; display: block; margin-bottom: 8px; }
+.result-title { font-size: 26px; font-weight: 900; margin-bottom: 4px; }
+.result-sub   { font-size: 14px; color: var(--muted); font-family: 'Assistant', sans-serif; margin-bottom: 20px; line-height: 1.5; }
+
+.result-stats-row {
+  display: flex; gap: 10px; justify-content: center;
+  margin-bottom: 20px;
+}
+.r-stat {
+  flex: 1; background: #f8fafc; border-radius: 12px; padding: 12px 8px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.r-stat-val { font-size: 24px; font-weight: 900; }
+.r-stat-lbl { font-size: 11px; color: var(--muted); font-weight: 600; font-family: 'Assistant', sans-serif; }
+
+.answer-verdict {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 10px;
+  text-align: right;
+}
+.verdict-icon { font-size: 24px; flex-shrink: 0; }
+.verdict-text { font-size: 13px; color: var(--muted); font-family: 'Assistant', sans-serif; line-height: 1.5; flex: 1; }
+.verdict-text strong { color: var(--text); }
+
+.result-actions { display: flex; gap: 10px; }
+.btn-next-round {
+  flex: 1; background: var(--knesset); color: #fff; border: none;
+  border-radius: 14px; padding: 15px; font-size: 16px; font-weight: 800;
+  cursor: pointer; font-family: inherit;
+  box-shadow: 0 5px 0 #0d2240;
+  position: relative; top: 0; transition: all 0.1s;
+}
+.btn-next-round:active { top: 5px; box-shadow: none; }
+.btn-home-result {
+  padding: 15px 18px; border-radius: 14px;
+  border: 2px solid #e2e8f0; background: transparent;
+  color: var(--muted); font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+}
+
+/* ═══════════════════════════════════════════
+   WIN / LOSE screens
+═══════════════════════════════════════════ */
+#screen-win, #screen-lose {
+  background: linear-gradient(180deg, #a8d8f0 0%, #d4eefc 50%, #e8f4fd 100%);
+  align-items: center; justify-content: center;
+  padding: 24px;
+}
+.end-card {
+  background: var(--white);
+  border-radius: 24px;
+  padding: 32px 24px 28px;
+  max-width: 380px; width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes popIn { from{opacity:0;transform:scale(0.85)} to{opacity:1;transform:scale(1)} }
+.end-emoji { font-size: 64px; display: block; margin-bottom: 10px; }
+.end-title { font-size: 28px; font-weight: 900; color: var(--knesset); margin-bottom: 6px; }
+.end-sub { font-size: 14px; color: var(--muted); line-height: 1.6; font-family: 'Assistant', sans-serif; margin-bottom: 24px; }
+.end-stats { display: flex; gap: 12px; justify-content: center; margin-bottom: 24px; }
+.end-stat { flex: 1; background: #f8fafc; border-radius: 12px; padding: 12px 6px; }
+.end-stat-val { font-size: 26px; font-weight: 900; color: var(--knesset); }
+.end-stat-lbl { font-size: 11px; color: var(--muted); font-weight: 600; font-family: 'Assistant', sans-serif; margin-top: 2px; }
+.btn-play-again {
+  width: 100%; background: var(--knesset); color: #fff; border: none;
+  border-radius: 14px; padding: 15px; font-size: 16px; font-weight: 800;
+  cursor: pointer; font-family: inherit;
+  box-shadow: 0 5px 0 #0d2240;
+  position: relative; top: 0; transition: all 0.1s;
+  margin-bottom: 10px;
+}
+.btn-play-again:active { top: 5px; box-shadow: none; }
+.btn-home-end {
+  width: 100%; padding: 13px; border-radius: 14px;
+  border: 2px solid #e2e8f0; background: transparent;
+  color: var(--muted); font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+}
+
+/* ═══════════════════════════════════════════
+   HOW TO MODAL
+═══════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 0;
+  animation: fadeInOverlay 0.2s ease;
+}
+.modal-sheet {
+  background: var(--white);
+  border-radius: 24px 24px 0 0;
+  padding: 20px 20px 36px;
+  width: 100%; max-width: 480px;
+  animation: slideUp 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+.modal-handle { width: 40px; height: 4px; background: #e2e8f0; border-radius: 4px; margin: 0 auto 18px; }
+.modal-title-how { font-size: 20px; font-weight: 900; color: var(--knesset); text-align: center; margin-bottom: 18px; }
+.how-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.how-step {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: #f8fafc; border-radius: 12px; padding: 10px 14px;
+}
+.how-step-icon { font-size: 22px; flex-shrink: 0; }
+.how-step-text { font-size: 13px; line-height: 1.6; color: var(--muted); font-family: 'Assistant', sans-serif; }
+.how-step-text strong { color: var(--text); }
+.btn-got-it {
+  width: 100%; background: var(--knesset); color: #fff; border: none;
+  border-radius: 14px; padding: 14px; font-size: 15px; font-weight: 800;
+  cursor: pointer; font-family: inherit;
+}
+
+/* ═══════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════ */
+/* Lives */
+.lives-row {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin-top: 5px;
+}
+.life-heart { font-size: 18px; transition: all 0.3s; }
+.life-heart.dead { filter: grayscale(1); opacity: 0.35; transform: scale(0.8); }
+
+/* ── MOBILE COMPACT: tighten everything on short screens ── */
+@media (max-height: 700px) {
+  .scene-wrap        { height: 140px !important; }
+  .vote-card         { padding: 10px 14px 8px !important; }
+  .vote-card-title   { font-size: 13px !important; margin-bottom: 6px !important; }
+  .ans-btn           { padding: 11px 4px !important; }
+  .ans-btn .ans-icon { font-size: 18px !important; }
+  .ans-btn .ans-text { font-size: 13px !important; }
+  .question-area     { gap: 6px !important; padding: 6px 12px 8px !important; }
+  .top-bar           { padding: 8px 12px 4px !important; }
+  .life-heart        { font-size: 16px !important; }
+}
+@media (max-height: 600px) {
+  .scene-wrap        { height: 110px !important; }
+  .vote-card-label   { display: none !important; }
+  .question-area     { gap: 4px !important; padding: 4px 12px 6px !important; }
+  .top-bar           { padding: 6px 12px 4px !important; }
+}
+
+/* Safe area for iOS notch */
+#screen-play { padding-bottom: env(safe-area-inset-bottom, 0px); }
+#screen-home .home-card { padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+
+
+
+@keyframes shake { 0%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} 100%{transform:translateX(0)} }
+.shake { animation: shake 0.4s ease; }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- LOADING -->
+<div id="screen-loading" class="screen active">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:16px;padding:24px;text-align:center;background:linear-gradient(180deg,#a8d8f0,#d4eefc 50%,#e8f4fd 80%,#d4c5a8 100%)">
+    <div class="load-knesset">🏛️</div>
+    <div class="load-title">הדרך לכנסת</div>
+    <div class="load-sub">טוען הצבעות...</div>
+    <div class="load-bar-wrap"><div class="load-bar"></div></div>
+  </div>
+</div>
+
+<!-- ERROR -->
+<div id="screen-error" class="screen">
+  <div class="err-icon">⚠️</div>
+  <div class="err-title">שגיאה בטעינה</div>
+  <div id="error-msg" class="err-msg"></div>
+  <button class="btn-retry" onclick="loadData(true)">🔄 נסה שוב</button>
+</div>
+
+<!-- HOME -->
+<div id="screen-home" class="screen">
+  <div class="home-sky">
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+  </div>
+  <div class="home-knesset-wrap">
+    <svg width="120" height="90" viewBox="0 0 120 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Base platform -->
+      <rect x="5" y="75" width="110" height="8" rx="2" fill="#c8a96e"/>
+      <rect x="10" y="70" width="100" height="8" rx="2" fill="#d4b87a"/>
+      <!-- Main building -->
+      <rect x="20" y="30" width="80" height="44" fill="#1a3a5c"/>
+      <!-- Windows row 1 -->
+      <rect x="26" y="36" width="10" height="10" rx="2" fill="#d4a843" opacity="0.7"/>
+      <rect x="42" y="36" width="10" height="10" rx="2" fill="#d4a843" opacity="0.9"/>
+      <rect x="58" y="36" width="10" height="10" rx="2" fill="#d4a843" opacity="0.7"/>
+      <rect x="74" y="36" width="10" height="10" rx="2" fill="#d4a843" opacity="0.8"/>
+      <rect x="90" y="36" width="6" height="10" rx="2" fill="#d4a843" opacity="0.6"/>
+      <!-- Windows row 2 -->
+      <rect x="26" y="52" width="10" height="10" rx="2" fill="#a0bcd4" opacity="0.6"/>
+      <rect x="42" y="52" width="10" height="10" rx="2" fill="#a0bcd4" opacity="0.8"/>
+      <rect x="74" y="52" width="10" height="10" rx="2" fill="#a0bcd4" opacity="0.7"/>
+      <rect x="90" y="52" width="6" height="10" rx="2" fill="#a0bcd4" opacity="0.5"/>
+      <!-- Door -->
+      <rect x="53" y="55" width="14" height="19" rx="2" fill="#0d2240"/>
+      <!-- Menorah above -->
+      <rect x="56" y="15" width="8" height="16" fill="#c8a96e"/>
+      <!-- Roof triangle -->
+      <polygon points="20,30 60,10 100,30" fill="#0d2240"/>
+      <!-- Flag -->
+      <line x1="80" y1="10" x2="80" y2="2" stroke="#888" stroke-width="1.5"/>
+      <rect x="80" y="2" width="12" height="8" rx="1" fill="#2563eb" opacity="0.8"/>
+    </svg>
+  </div>
+
+  <div class="home-card">
+    <div class="home-badge">🗳️ משחק בחירות</div>
+    <div class="home-title">הדרך לכנסת</div>
+    <div class="home-sub">נחש איך הצביע חבר הכנסת — והגע לכנסת!</div>
+
+    <div class="diff-label">בחר רמת קושי</div>
+    <div class="diff-row">
+      <button class="diff-btn easy" id="diff-easy" onclick="setDiff('easy')">
+        <span class="d-icon">🚶</span>
+        <span class="d-name">קל</span>
+        <span class="d-steps">5 שלבים</span>
+      </button>
+      <button class="diff-btn medium active" id="diff-medium" onclick="setDiff('medium')">
+        <span class="d-icon">🏃</span>
+        <span class="d-name">בינוני</span>
+        <span class="d-steps">10 שלבים</span>
+      </button>
+      <button class="diff-btn hard" id="diff-hard" onclick="setDiff('hard')">
+        <span class="d-icon">🔥</span>
+        <span class="d-name">קשה</span>
+        <span class="d-steps">20 שלבים</span>
+      </button>
+    </div>
+
+    <div style="width:100%;display:flex;flex-direction:column;gap:10px;">
+      <button class="btn-play" onclick="startGame()">🏛️ יציאה לדרך!</button>
+      <button class="btn-howto" onclick="openHowTo()">❓ איך משחקים?</button>
+    </div>
+    <div class="home-credit">פיתוח: גיל פלדמן</div>
+    <div id="bg-load-indicator" style="display:none;font-size:11px;color:var(--muted);margin-top:4px;display:flex;align-items:center;gap:5px;opacity:0.7;">
+      <span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:2px solid var(--muted);border-top-color:var(--knesset);animation:spin 0.8s linear infinite;"></span>
+      <span id="bg-load-text">טוען עוד הצבעות...</span>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+  </div>
+</div>
+
+<!-- PLAY -->
+<div id="screen-play" class="screen">
+
+  <!-- Top progress bar -->
+  <div class="top-bar">
+    <button class="btn-back-play" onclick="goHome()">◄ חזור</button>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+    </div>
+    <div class="step-label" id="step-label">0/0</div>
+  </div>
+
+  <!-- Scene -->
+  <div class="scene-wrap" id="scene-wrap">
+    <div class="scene-sky"></div>
+    <div class="scene-cloud-1"></div>
+    <div class="scene-cloud-2"></div>
+
+    <!-- Knesset far end -->
+    <div class="knesset-far" id="knesset-far">
+      <svg width="72" height="58" viewBox="0 0 72 58" fill="none">
+        <rect x="3" y="48" width="66" height="6" rx="1" fill="#c8a96e"/>
+        <rect x="8" y="44" width="56" height="6" rx="1" fill="#d4b87a"/>
+        <rect x="14" y="20" width="44" height="27" fill="#1a3a5c"/>
+        <rect x="18" y="24" width="6" height="6" rx="1" fill="#d4a843" opacity="0.8"/>
+        <rect x="27" y="24" width="6" height="6" rx="1" fill="#d4a843"/>
+        <rect x="36" y="24" width="6" height="6" rx="1" fill="#d4a843" opacity="0.7"/>
+        <rect x="45" y="24" width="6" height="6" rx="1" fill="#d4a843" opacity="0.9"/>
+        <rect x="18" y="34" width="6" height="6" rx="1" fill="#a0bcd4" opacity="0.7"/>
+        <rect x="36" y="34" width="6" height="6" rx="1" fill="#a0bcd4" opacity="0.6"/>
+        <rect x="45" y="34" width="6" height="6" rx="1" fill="#a0bcd4" opacity="0.8"/>
+        <rect x="31" y="37" width="10" height="11" rx="1" fill="#0d2240"/>
+        <rect x="33" y="10" width="6" height="10" fill="#c8a96e"/>
+        <polygon points="14,20 36,8 58,20" fill="#0d2240"/>
+        <line x1="48" y1="8" x2="48" y2="3" stroke="#888" stroke-width="1"/>
+        <rect x="48" y="3" width="8" height="5" rx="1" fill="#2563eb" opacity="0.8"/>
+      </svg>
+    </div>
+
+    <!-- Grass -->
+    <div class="grass-strip"></div>
+
+    <!-- Road -->
+    <div class="road-strip"></div>
+
+    <!-- Citizen -->
+    <div class="citizen-wrap citizen-walking" id="citizen-wrap" style="right:82%">
+      <svg class="citizen-svg" viewBox="0 0 28 60" width="28" height="60" xmlns="http://www.w3.org/2000/svg">
+        <g class="c-body">
+          <!-- Head -->
+          <circle cx="14" cy="7" r="6" fill="#f5d0a9" stroke="#c9a880" stroke-width="0.8"/>
+          <!-- Hair -->
+          <ellipse cx="14" cy="3" rx="5.5" ry="3" fill="#4a3728"/>
+          <!-- Shirt -->
+          <rect x="8" y="13" width="12" height="16" rx="3" fill="#2563eb"/>
+          <!-- Collar -->
+          <rect x="11" y="13" width="6" height="12" fill="#e8eaf6"/>
+          <!-- Tie dot -->
+          <circle cx="14" cy="17" r="1.5" fill="#e63946"/>
+          <!-- Left arm -->
+          <rect class="c-arm-l" x="3" y="14" width="5" height="12" rx="2.5" fill="#2563eb"/>
+          <!-- Right arm -->
+          <rect class="c-arm-r" x="20" y="14" width="5" height="12" rx="2.5" fill="#2563eb"/>
+          <!-- Pants -->
+          <rect x="9" y="28" width="10" height="16" rx="2" fill="#1e293b"/>
+          <!-- Left leg -->
+          <rect class="c-leg-l" x="9"  y="42" width="5" height="13" rx="2.5" fill="#374151"/>
+          <!-- Right leg -->
+          <rect class="c-leg-r" x="14" y="42" width="5" height="13" rx="2.5" fill="#374151"/>
+          <!-- Shoes -->
+          <ellipse cx="11.5" cy="55" rx="4" ry="2.5" fill="#111"/>
+          <ellipse cx="16.5" cy="55" rx="4" ry="2.5" fill="#111"/>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Feedback burst -->
+    <div class="feedback-burst" id="feedback-burst"></div>
+  </div>
+
+  <!-- Question area -->
+  <div class="question-area">
+
+    <div class="vote-card">
+      <div class="vote-card-label">הצבעה בכנסת</div>
+      <div class="vote-card-title" id="vote-title">—</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div class="vote-mk-row" style="flex:1;min-width:0;">
+          <div class="vote-mk-avatar">🧑‍💼</div>
+          <div class="vote-mk-info">
+            <div class="vote-mk-name" id="mk-name">—</div>
+          </div>
+        </div>
+        <div class="timer-wrap" id="timer-wrap">
+          <div class="timer-arc" id="timer-arc">
+            <svg width="38" height="38" viewBox="0 0 38 38">
+              <circle class="timer-arc-track" cx="19" cy="19" r="16"/>
+              <circle class="timer-arc-fill" id="timer-arc-fill" cx="19" cy="19" r="16"
+                stroke-dasharray="100.53" stroke-dashoffset="0"/>
+            </svg>
+            <div class="timer-num" id="timer-num">5</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="answer-row">
+      <button class="ans-btn for" id="btn-for" onclick="answer('for')">
+        <span class="ans-icon">✅</span>
+        <span class="ans-text">בעד</span>
+      </button>
+      <button class="ans-btn against" id="btn-against" onclick="answer('against')">
+        <span class="ans-icon">❌</span>
+        <span class="ans-text">נגד</span>
+      </button>
+      <button class="ans-btn abstain" id="btn-abstain" onclick="answer('abstain')">
+        <span class="ans-icon">🤐</span>
+        <span class="ans-text">נמנע</span>
+      </button>
+    </div>
+
+    <div class="q-counter">
+      <span class="q-pill" id="q-pill">שאלה 1</span>
+      <div class="lives-row" id="lives-wrap"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- WIN -->
+<div id="screen-win" class="screen">
+  <div class="end-card">
+    <span class="end-emoji">🎉</span>
+    <div class="end-title">הגעת לכנסת!</div>
+    <div class="end-sub" id="win-sub">כל הכבוד! הגעת ליעד בהצלחה.</div>
+    <div class="end-stats">
+      <div class="end-stat"><div class="end-stat-val" id="win-correct">0</div><div class="end-stat-lbl">נכון</div></div>
+      <div class="end-stat"><div class="end-stat-val" id="win-wrong">0</div><div class="end-stat-lbl">טעות</div></div>
+      <div class="end-stat"><div class="end-stat-val" id="win-steps">0</div><div class="end-stat-lbl">שלבים</div></div>
+    </div>
+    <button class="btn-play-again" onclick="startGame()">🔄 משחק נוסף</button>
+    <button class="btn-home-end" onclick="goHome()">🏠 בית</button>
+  </div>
+</div>
+
+<!-- LOSE -->
+<div id="screen-lose" class="screen">
+  <div class="end-card">
+    <span class="end-emoji">😔</span>
+    <div class="end-title">לא הצלחת הפעם</div>
+    <div class="end-sub" id="lose-sub">אל תוותרו — ניסיון נוסף!</div>
+    <div class="end-stats">
+      <div class="end-stat"><div class="end-stat-val" id="lose-correct">0</div><div class="end-stat-lbl">נכון ✅</div></div>
+      <div class="end-stat"><div class="end-stat-val" id="lose-wrong">0</div><div class="end-stat-lbl">טעות ❌</div></div>
+      <div class="end-stat"><div class="end-stat-val" id="lose-steps">0</div><div class="end-stat-lbl">מקס' שלב 📍</div></div>
+    </div>
+    <button class="btn-play-again" onclick="startGame()">🔄 נסה שוב</button>
+    <button class="btn-home-end" onclick="goHome()">🏠 בית</button>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<!-- Flash -->
+<div class="screen-flash" id="screen-flash"></div>
+
+<!-- How To Modal -->
+<div id="modal-howto" style="display:none" onclick="closeHowToOutside(event)">
+  <div class="modal-overlay">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title-how">🏛️ איך משחקים?</div>
+      <div class="how-steps">
+        <div class="how-step">
+          <div class="how-step-icon">🧑‍💼</div>
+          <div class="how-step-text">אתה <strong>אזרח שמנסה להגיע לכנסת</strong> — כל תשובה נכונה מקרבת אותך ליעד</div>
+        </div>
+        <div class="how-step">
+          <div class="how-step-icon">🗳️</div>
+          <div class="how-step-text">בכל שלב מוצגת <strong>הצבעה אמיתית מהכנסת</strong> — עם שם ח"כ וסיעה. נחשו איך הצביע/ה: <strong>בעד / נגד / נמנע</strong></div>
+        </div>
+        <div class="how-step">
+          <div class="how-step-icon">⏱️</div>
+          <div class="how-step-text">יש לכם <strong>10 שניות</strong> לענות — אחרת זה נחשב טעות!</div>
+        </div>
+        <div class="how-step">
+          <div class="how-step-icon">❤️</div>
+          <div class="how-step-text">יש לכם <strong>5 חיים</strong> — כל טעות (או פסק זמן) מוריד לב אחד</div>
+        </div>
+        <div class="how-step">
+          <div class="how-step-icon">↩️</div>
+          <div class="how-step-text">טעות = <strong>שלב אחד אחורה</strong>. נכון = שלב קדימה. נגמרו החיים = הפסד!</div>
+        </div>
+        <div class="how-step">
+          <div class="how-step-icon">🏆</div>
+          <div class="how-step-text">הגיעו ליעד לפני שנגמרות ה<strong>-5 שניות</strong> בכל שאלה</div>
+        </div>
+      </div>
+      <button class="btn-got-it" onclick="closeHowTo()">הבנתי, בואו נלך! 🚶</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw7mtU_4w7tz6Iz4VPAkO5eUdEnil2PsiLpo17zscAJNxMJml7p5qBr9wJifIgiYlpy/exec";
+const POST_URL        = "https://script.google.com/macros/s/AKfycbxHS4lwq6jtrwEK1sINrwG8JDHC5YD-QUO4eTHpU4yG-e83iT9OtbsADOlBZB62OirS/exec";
+const API_BASES       = ["https://www.knesset.gov.il","https://knesset.gov.il","https://main.knesset.gov.il"];
+const DETAIL_PATH     = "/WebSiteApi/knessetapi/Votes/GetVoteDetails/";
+const CACHE_KEY       = "derech-knesset-cache-v1";
+const DIFF_STEPS      = { easy: 5, medium: 10, hard: 20 };
+const TIMER_SECONDS   = 10;
+const MAX_LIVES       = 5;
+const TIMER_CIRCUMFERENCE = 2 * Math.PI * 16; // r=16
+
+// ══════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById("screen-"+id).classList.add("active");
+}
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+function readCache()  { try{return JSON.parse(localStorage.getItem(CACHE_KEY)||"{}");}catch{return{};} }
+function writeCache(d){ try{localStorage.setItem(CACHE_KEY,JSON.stringify(d));}catch{} }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function shuffle(arr){ const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a; }
+
+// ══════════════════════════════════════════════
+// DATA LOADING
+// ══════════════════════════════════════════════
+let allGames = [];
+let currentDiff = "medium";
+
+function normalizeVote(title) {
+  if (!title) return null;
+  const t = title.trim();
+  if (t === "בעד")  return "for";
+  if (t === "נגד")  return "against";
+  if (t === "נמנע" || t === "נמנע/נעדר" || t === "נעדר") return "abstain";
+  return null;
+}
+
+async function fetchSheetRows() {
+  const resp = await fetch(APPS_SCRIPT_URL);
+  const data = await resp.json();
+  if (!Array.isArray(data)) throw new Error("שגיאה בטעינת הנתונים");
+  return data.filter(r => r.voteId && /^\d+$/.test(r.voteId) && r.type)
+    .map(r => ({ ...r, shortName: (r.shortName||r.short_name||"").trim(), voteDir: r.type }));
+}
+
+async function fetchVoteDetails(voteId) {
+  for (const base of API_BASES) {
+    try {
+      const r = await fetch(base+DETAIL_PATH+voteId,{mode:"cors"});
+      if (!r.ok) throw new Error("HTTP "+r.status);
+      const data = await r.json();
+      if (data?.VoteDetails) return data;
+    } catch(_) {}
+    await sleep(150);
+  }
+  throw new Error("לא ניתן לטעון הצבעה "+voteId);
+}
+
+function buildGame(row, data) {
+  const header  = data.VoteHeader?.[0]||{};
+  const details = data.VoteDetails||[];
+  const allMembers = details
+    .filter(d=>normalizeVote(d.Title))
+    .map(d=>({
+      name: (d.MkName||"").trim(),
+      vote: normalizeVote(d.Title),
+      faction: (d.FactionName||"").trim(),
+    }));
+  if (!allMembers.length) return null;
+  // Build question list: each member is a question
+  const questions = shuffle(allMembers).map(m => ({
+    mkName: m.name,
+    mkFaction: m.faction,
+    correctVote: m.vote,
+    voteTitle: row.shortName || header.ItemTitle || "ללא כותרת",
+    voteId: row.voteId,
+  }));
+  return { voteId: row.voteId, title: row.shortName||header.ItemTitle||"ללא כותרת", questions };
+}
+
+async function loadData(bustCache=false) {
+  showScreen("loading");
+  try {
+    if (bustCache) writeCache({});
+    const rows  = await fetchSheetRows();
+    if (!rows.length) throw new Error("לא נמצאו הצבעות פעילות");
+    const cache = readCache();
+    // ── Phase 1: load from cache instantly ──
+    for (const row of rows) {
+      if (cache[row.voteId]) {
+        allGames.push(cache[row.voteId]);
+      }
+    }
+
+    // If we already have games from cache — show home immediately
+    if (allGames.length > 0) {
+      showScreen("home");
+    }
+
+    // ── Phase 2: fetch any missing rows one-by-one, show home after first success ──
+    const missing = rows.filter(r => !cache[r.voteId]);
+    if (missing.length > 0) {
+      const ind = document.getElementById("bg-load-indicator");
+      if (ind) ind.style.display = "flex";
+    }
+    let loaded = 0;
+    for (const row of missing) {
+      try {
+        const data = await fetchVoteDetails(row.voteId);
+        const game = buildGame(row, data);
+        if (game) {
+          cache[row.voteId] = game;
+          allGames.push(game);
+          writeCache(cache);
+          loaded++;
+          // Show home as soon as we have the first loaded game
+          if (allGames.length === 1) showScreen("home");
+          const txt = document.getElementById("bg-load-text");
+          if (txt) txt.textContent = `טוען הצבעות... (${allGames.length})`;
+        }
+      } catch(_) {}
+    }
+    const ind = document.getElementById("bg-load-indicator");
+    if (ind) ind.style.display = "none";
+
+    if (!allGames.length) throw new Error("לא נמצאו הצבעות תקינות");
+  } catch(e) {
+    document.getElementById("error-msg").textContent = e.message;
+    showScreen("error");
+  }
+}
+
+// ══════════════════════════════════════════════
+// DIFFICULTY
+// ══════════════════════════════════════════════
+function setDiff(d) {
+  currentDiff = d;
+  document.querySelectorAll(".diff-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("diff-"+d).classList.add("active");
+}
+
+// ══════════════════════════════════════════════
+// GAME STATE
+// ══════════════════════════════════════════════
+let gs = null;
+let timerInterval = null;
+let timerRemaining = 0;
+
+function buildQuestionPool() {
+  // pull questions from all loaded games, shuffle
+  let pool = [];
+  allGames.forEach(g => pool = pool.concat(g.questions));
+  return shuffle(pool);
+}
+
+function startGame() {
+  clearTimer();
+  const totalSteps = DIFF_STEPS[currentDiff];
+  gs = {
+    totalSteps,
+    currentStep: 0,
+    questionIdx: 0,
+    questions: buildQuestionPool(),
+    correctCount: 0,
+    wrongCount: 0,
+    livesLeft: MAX_LIVES,
+    maxStep: 0,
+    over: false,
+    startTime: Date.now(),
+  };
+  updateScene();
+  updateLivesUI();
+  loadQuestion();
+  showScreen("play");
+}
+
+function goHome() {
+  clearTimer();
+  gs = null;
+  showScreen("home");
+}
+
+// ══════════════════════════════════════════════
+// SCENE
+// ══════════════════════════════════════════════
+function updateLivesUI() {
+  const wrap = document.getElementById("lives-wrap");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  for (let i = 0; i < MAX_LIVES; i++) {
+    const heart = document.createElement("span");
+    heart.className = "life-heart" + (i < gs.livesLeft ? " alive" : " dead");
+    heart.textContent = i < gs.livesLeft ? "❤️" : "🖤";
+    wrap.appendChild(heart);
+  }
+}
+
+
+  const ratio = Math.max(0, Math.min(1, gs.currentStep / gs.totalSteps));
+  // Citizen starts at right: 82% and ends at right: 8%
+  const rightPct = 82 - ratio * 74;
+  const citizen = document.getElementById("citizen-wrap");
+  citizen.style.right = rightPct + "%";
+
+  // Progress bar
+  document.getElementById("progress-bar").style.width = (ratio*100)+"%";
+  document.getElementById("step-label").textContent = gs.currentStep+"/"+gs.totalSteps;
+
+  // Knesset grows as you approach (parallax effect)
+  const knesset = document.getElementById("knesset-far");
+  const scale = 0.8 + ratio * 0.6;
+  knesset.style.transform = "scale("+scale+")";
+}
+
+function triggerFeedback(correct) {
+  const burst = document.getElementById("feedback-burst");
+  burst.className = "feedback-burst";
+  burst.textContent = correct ? "+1 🎉" : "−1 😬";
+  void burst.offsetWidth;
+  burst.className = "feedback-burst " + (correct ? "show-correct" : "show-wrong");
+
+  const flash = document.getElementById("screen-flash");
+  flash.className = "screen-flash " + (correct ? "green" : "red");
+  flash.style.opacity = "1";
+  setTimeout(()=>{ flash.style.opacity="0"; }, 300);
+
+  // Shake citizen on wrong
+  if (!correct) {
+    const c = document.getElementById("citizen-wrap");
+    c.classList.add("shake");
+    setTimeout(()=>c.classList.remove("shake"), 400);
+  }
+}
+
+// ══════════════════════════════════════════════
+// TIMER
+// ══════════════════════════════════════════════
+function startTimer() {
+  clearTimer();
+  timerRemaining = TIMER_SECONDS;
+  updateTimerUI(TIMER_SECONDS);
+  timerInterval = setInterval(() => {
+    timerRemaining -= 0.1;
+    updateTimerUI(timerRemaining);
+    if (timerRemaining <= 0) {
+      clearTimer();
+      onTimeout();
+    }
+  }, 100);
+}
+
+function clearTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function updateTimerUI(remaining) {
+  const r = Math.max(0, remaining);
+  const fill = document.getElementById("timer-arc-fill");
+  const num  = document.getElementById("timer-num");
+  // fraction of time left
+  const frac = r / TIMER_SECONDS;
+  const offset = TIMER_CIRCUMFERENCE * (1 - frac);
+  fill.style.strokeDashoffset = offset;
+  // Color transition: green → yellow → red
+  let color;
+  if (frac > 0.5)       color = "var(--green)";
+  else if (frac > 0.25) color = "#f59e0b";
+  else                  color = "var(--accent)";
+  fill.style.stroke = color;
+  num.textContent = Math.ceil(r);
+  num.style.color = frac < 0.35 ? "var(--accent)" : "var(--text)";
+}
+
+function onTimeout() {
+  disableAnswers();
+  processAnswer(null); // null = timeout = wrong
+}
+
+// ══════════════════════════════════════════════
+// QUESTION
+// ══════════════════════════════════════════════
+function loadQuestion() {
+  if (!gs || gs.over) return;
+  // Wrap around question pool if needed
+  if (gs.questionIdx >= gs.questions.length) {
+    gs.questions = gs.questions.concat(buildQuestionPool());
+  }
+  const q = gs.questions[gs.questionIdx];
+  document.getElementById("vote-title").textContent = q.voteTitle;
+  document.getElementById("mk-name").textContent    = q.mkName;
+  document.getElementById("q-pill").textContent     = "שאלה " + (gs.questionIdx+1);
+
+  enableAnswers();
+  startTimer();
+}
+
+function enableAnswers() {
+  ["btn-for","btn-against","btn-abstain"].forEach(id=>{
+    const b = document.getElementById(id);
+    b.disabled = false;
+    b.className = b.className.replace(/ correct-flash| wrong-flash/g,"");
+  });
+}
+function disableAnswers() {
+  ["btn-for","btn-against","btn-abstain"].forEach(id=>{
+    document.getElementById(id).disabled = true;
+  });
+}
+
+// ══════════════════════════════════════════════
+// ANSWER
+// ══════════════════════════════════════════════
+const VOTE_LABELS = { for:"בעד", against:"נגד", abstain:"נמנע" };
+
+function answer(vote) {
+  if (!gs || gs.over) return;
+  clearTimer();
+  disableAnswers();
+  processAnswer(vote);
+}
+
+function processAnswer(vote) {
+  const q = gs.questions[gs.questionIdx];
+  const correct = vote === q.correctVote;
+
+  // Flash the button
+  const btnMap = { for:"btn-for", against:"btn-against", abstain:"btn-abstain" };
+  if (vote) {
+    document.getElementById(btnMap[vote]).classList.add(correct ? "correct-flash" : "wrong-flash");
+    if (!correct) document.getElementById(btnMap[q.correctVote]).classList.add("correct-flash");
+  } else {
+    // timeout — show correct
+    document.getElementById(btnMap[q.correctVote]).classList.add("correct-flash");
+  }
+
+  if (correct) {
+    gs.correctCount++;
+    gs.currentStep = Math.min(gs.totalSteps, gs.currentStep + 1);
+  } else {
+    gs.wrongCount++;
+    gs.livesLeft = Math.max(0, gs.livesLeft - 1);
+    gs.currentStep = Math.max(0, gs.currentStep - 1);
+  }
+  gs.maxStep = Math.max(gs.maxStep, gs.currentStep);
+
+  triggerFeedback(correct);
+  updateScene();
+  updateLivesUI();
+
+  // Walking animation
+  const citizen = document.getElementById("citizen-wrap");
+  citizen.className = "citizen-wrap citizen-walking";
+
+  // Check win
+  if (gs.currentStep >= gs.totalSteps) {
+    gs.over = true;
+    setTimeout(()=>showWin(), 700);
+    return;
+  }
+
+  // Check lose (no lives left)
+  if (gs.livesLeft <= 0) {
+    gs.over = true;
+    setTimeout(()=>showLose(), 700);
+    return;
+  }
+
+  gs.questionIdx++;
+  setTimeout(()=>{
+    enableAnswers();
+    loadQuestion();
+  }, 900);
+}
+
+// ══════════════════════════════════════════════
+// END SCREENS
+// ══════════════════════════════════════════════
+function showWin() {
+  clearTimer();
+  const duration = Math.round((Date.now()-gs.startTime)/1000);
+  document.getElementById("win-correct").textContent = gs.correctCount;
+  document.getElementById("win-wrong").textContent   = gs.wrongCount;
+  document.getElementById("win-steps").textContent   = gs.totalSteps;
+  document.getElementById("win-sub").textContent     = `הגעת תוך ${gs.correctCount+gs.wrongCount} שאלות (${duration} שנ')`;
+  sendResult("win");
+  showScreen("win");
+}
+
+function showLose() {
+  clearTimer();
+  document.getElementById("lose-correct").textContent = gs.correctCount;
+  document.getElementById("lose-wrong").textContent   = gs.wrongCount;
+  document.getElementById("lose-steps").textContent   = gs.maxStep;
+  document.getElementById("lose-sub").textContent     = `הגעת עד שלב ${gs.maxStep} מתוך ${gs.totalSteps}`;
+  sendResult("lose");
+  showScreen("lose");
+}
+
+function sendResult(result) {
+  try {
+    fetch(POST_URL,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain"},
+      body: JSON.stringify({
+        game:"derech-knesset",
+        difficulty: currentDiff,
+        result,
+        correctCount: gs.correctCount,
+        wrongCount:   gs.wrongCount,
+        maxStep:      gs.maxStep,
+        totalSteps:   gs.totalSteps,
+        duration:     Math.round((Date.now()-gs.startTime)/1000),
+      }),
+    }).catch(()=>{});
+  } catch(_) {}
+}
+
+// ══════════════════════════════════════════════
+// MODALS
+// ══════════════════════════════════════════════
+function openHowTo() { document.getElementById("modal-howto").style.display="block"; }
+function closeHowTo(){ document.getElementById("modal-howto").style.display="none";  }
+function closeHowToOutside(e){ if(e.target===document.getElementById("modal-howto")) closeHowTo(); }
+
+// ══════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════
+loadData();
+</script>
+</body>
+</html>
