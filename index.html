@@ -744,7 +744,58 @@ html, body {
 @keyframes shake { 0%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} 100%{transform:translateX(0)} }
 .shake { animation: shake 0.4s ease; }
 
-/* bg loader */
+/* Last answer feedback card */
+.last-answer-wrap {
+  flex-shrink: 0;
+  padding: 0 2px;
+}
+.last-answer-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 12px;
+  padding: 10px 14px;
+  border: 2px solid transparent;
+  animation: laSlideIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes laSlideIn {
+  from { opacity: 0; transform: translateY(6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+.last-answer-card.correct {
+  background: rgba(45,198,83,0.12);
+  border-color: rgba(45,198,83,0.4);
+}
+.last-answer-card.wrong {
+  background: rgba(230,57,70,0.10);
+  border-color: rgba(230,57,70,0.35);
+}
+.last-answer-card.timeout {
+  background: rgba(245,158,11,0.10);
+  border-color: rgba(245,158,11,0.35);
+}
+.la-icon { font-size: 22px; flex-shrink: 0; }
+.la-text { flex: 1; min-width: 0; }
+.la-title {
+  font-size: 13px; font-weight: 800;
+  line-height: 1.2;
+}
+.last-answer-card.correct .la-title { color: #15803d; }
+.last-answer-card.wrong   .la-title { color: #b91c1c; }
+.last-answer-card.timeout .la-title { color: #92400e; }
+.la-detail {
+  font-size: 12px; color: var(--muted);
+  font-family: 'Assistant', sans-serif;
+  margin-top: 1px;
+}
+.la-detail strong { color: var(--text); }
+.la-step {
+  font-size: 13px; font-weight: 800;
+  white-space: nowrap; flex-shrink: 0;
+}
+.last-answer-card.correct .la-step { color: #15803d; }
+.last-answer-card.wrong   .la-step { color: #b91c1c; }
+.last-answer-card.timeout .la-step { color: #92400e; }
 @keyframes spinLoader { to { transform: rotate(360deg); } }
 .bg-loader-hidden { display: none; }
 .bg-loader-visible {
@@ -971,6 +1022,18 @@ html, body {
         <span class="ans-icon">🤐</span>
         <span class="ans-text">נמנע</span>
       </button>
+    </div>
+
+    <!-- Last answer feedback -->
+    <div class="last-answer-wrap" id="last-answer-wrap" style="visibility:hidden">
+      <div class="last-answer-card" id="last-answer-card">
+        <span class="la-icon" id="la-icon">✅</span>
+        <div class="la-text">
+          <div class="la-title" id="la-title">תשובה נכונה!</div>
+          <div class="la-detail" id="la-detail">הצביע <strong>בעד</strong></div>
+        </div>
+        <div class="la-step" id="la-step">+1 📍</div>
+      </div>
     </div>
 
     <div class="q-counter">
@@ -1372,6 +1435,9 @@ function onTimeout() {
 // ══════════════════════════════════════════════
 function loadQuestion() {
   if (!gs || gs.over) return;
+  // Hide last-answer card
+  var wrap = document.getElementById("last-answer-wrap");
+  if (wrap) wrap.style.visibility = "hidden";
   // Wrap around question pool if needed
   if (gs.questionIdx >= gs.questions.length) {
     gs.questions = gs.questions.concat(buildQuestionPool());
@@ -1402,6 +1468,46 @@ function disableAnswers() {
 // ANSWER
 // ══════════════════════════════════════════════
 const VOTE_LABELS = { for:"בעד", against:"נגד", abstain:"נמנע" };
+const VOTE_ICONS  = { for:"✅",   against:"❌",  abstain:"🤐"   };
+
+function showLastAnswer(correct, isTimeout, chosenVote, correctVote, stepDelta) {
+  var wrap  = document.getElementById("last-answer-wrap");
+  var card  = document.getElementById("last-answer-card");
+  var icon  = document.getElementById("la-icon");
+  var title = document.getElementById("la-title");
+  var detail= document.getElementById("la-detail");
+  var step  = document.getElementById("la-step");
+
+  // Re-trigger animation
+  card.classList.remove("correct","wrong","timeout");
+  void card.offsetWidth;
+
+  if (isTimeout) {
+    card.classList.add("timeout");
+    icon.textContent  = "⏰";
+    title.textContent = "פג הזמן!";
+  } else if (correct) {
+    card.classList.add("correct");
+    icon.textContent  = "✅";
+    title.textContent = "נכון!";
+  } else {
+    card.classList.add("wrong");
+    icon.textContent  = "❌";
+    title.textContent = "טעות!";
+  }
+
+  var correctLabel = VOTE_LABELS[correctVote] || correctVote;
+  var correctIcon  = VOTE_ICONS[correctVote]  || "";
+  if (correct) {
+    detail.innerHTML = "הצביע/ה " + correctIcon + " <strong>" + correctLabel + "</strong>";
+  } else {
+    var chosenLabel = chosenVote ? (VOTE_ICONS[chosenVote] + " " + VOTE_LABELS[chosenVote]) : "—";
+    detail.innerHTML = "ניחשת " + chosenLabel + " · נכון: " + correctIcon + " <strong>" + correctLabel + "</strong>";
+  }
+
+  step.textContent = stepDelta > 0 ? ("+" + stepDelta + " 📍") : (stepDelta + " 📍");
+  wrap.style.visibility = "visible";
+}
 
 function answer(vote) {
   if (!gs || gs.over) return;
@@ -1424,16 +1530,20 @@ function processAnswer(vote) {
     document.getElementById(btnMap[q.correctVote]).classList.add("correct-flash");
   }
 
+  var stepDelta;
   if (correct) {
     gs.correctCount++;
     gs.currentStep = Math.min(gs.totalSteps, gs.currentStep + 1);
+    stepDelta = +1;
   } else {
     gs.wrongCount++;
     gs.livesLeft = Math.max(0, gs.livesLeft - 1);
     gs.currentStep = Math.max(0, gs.currentStep - 1);
+    stepDelta = -1;
   }
   gs.maxStep = Math.max(gs.maxStep, gs.currentStep);
 
+  showLastAnswer(correct, vote === null, vote, q.correctVote, stepDelta);
   triggerFeedback(correct);
   updateScene();
   updateLivesUI();
